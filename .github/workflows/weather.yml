@@ -1,0 +1,28 @@
+name: Daily Weather Notification
+
+on:
+  schedule:
+    - cron: '40 20 * * *'  # 매일 KST 05:40 (= UTC 20:40 전날)
+  workflow_dispatch:        # GitHub 웹에서 수동 실행 가능
+
+jobs:
+  send-weather:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Send weather notification
+        env:
+          DATA_GO_KR_KEY:      ${{ secrets.DATA_GO_KR_KEY }}
+          KAKAO_REST_API_KEY:  ${{ secrets.KAKAO_REST_API_KEY }}
+          KAKAO_REFRESH_TOKEN: ${{ secrets.KAKAO_REFRESH_TOKEN }}
+        run: python main.py
