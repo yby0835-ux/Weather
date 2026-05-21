@@ -76,7 +76,7 @@ def get_forecast():
 
 def get_air():
     try:
-        url = 'http://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty'
+        url = 'https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty'
         params = {
             'serviceKey': AIR_KEY,
             'returnType': 'json',
