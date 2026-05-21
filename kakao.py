@@ -12,6 +12,8 @@ def _get_access_token():
         'client_id':     REST_KEY,
         'refresh_token': REFRESH_TOKEN,
     })
+    if not resp.ok:
+        print(f"카카오 토큰 갱신 실패: {resp.status_code} / {resp.text}")
     resp.raise_for_status()
     return resp.json()['access_token']
 
