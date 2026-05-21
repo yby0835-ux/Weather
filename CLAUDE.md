@@ -77,8 +77,9 @@ https://github.com/yby0835-ux/Weather/settings/secrets/actions
 | Secret 이름 | 설명 | 상태 |
 |---|---|---|
 | `DATA_GO_KR_KEY` | 공공데이터포털 API 키 | ✅ 등록됨 |
-| `KAKAO_REST_API_KEY` | 카카오 앱 REST API 키 | ✅ 등록됨 |
-| `KAKAO_REFRESH_TOKEN` | 카카오 OAuth refresh token | ❌ 미해결 |
+| `KAKAO_REST_API_KEY` | 카카오 앱 REST API 키 (Weather2) | ✅ 등록됨 |
+| `KAKAO_CLIENT_SECRET` | 카카오 앱 클라이언트 시크릿 | ✅ 등록됨 |
+| `KAKAO_REFRESH_TOKEN` | 카카오 OAuth refresh token | ✅ 등록됨 |
 
 ---
 
@@ -95,50 +96,20 @@ https://github.com/yby0835-ux/Weather/settings/secrets/actions
 
 ## 현재 상태 및 미해결 문제
 
-### ✅ 정상 작동
+### ✅ 전체 정상 작동 (2026-05-22 완료)
 - 기상청 날씨 API 데이터 수집
-- GitHub Actions 스케줄 실행
+- GitHub Actions 스케줄 실행 (매일 KST 05:40)
 - 메시지 포맷 생성
 - 에어코리아 API 실패 시 graceful 처리
+- 카카오 OAuth 토큰 발급 및 갱신
+- 카카오톡 '나와의 채팅' 메시지 전송
 
-### ❌ 미해결: 카카오 OAuth KOE010
-**증상**: 토큰 교환 시 `{"error":"invalid_client","error_code":"KOE010"}` 반복
-
-**원인 추정**: 카카오 새 개발자 콘솔(2024~)에서 OAuth 로그인용
-Redirect URI를 등록하는 위치가 사라져 token endpoint가 client를 인식 못 함.
-- 플랫폼 키 → REST API 키에 등록 시 authorization endpoint만 적용되고 token endpoint에는 미적용
-- 카카오 로그인 → 일반 페이지의 Redirect URI 섹션이 새 UI에서 제거됨
-
-**시도한 redirect URI 목록** (모두 KOE010):
-- `http://localhost/oauth`
-- `http://localhost:8080`
-- `https://example.com`
-
----
-
-## 내일 재개할 작업
-
-### Step 1 — redirect URI를 `https://example.com`으로 변경 후 시도
-1. Weather2 앱 플랫폼 키 수정:
-   ```
-   https://developers.kakao.com/console/app/1464201/config/platform-key
-   ```
-   - 기존 redirect URI 삭제 → `https://example.com` 추가
-
-2. 인가 코드 획득 (브라우저):
-   ```
-   https://kauth.kakao.com/oauth/authorize?client_id=d40c837591e55451fddf671490367d0d&redirect_uri=https://example.com&response_type=code&scope=talk_message
-   ```
-   - 로그인 후 주소창에서 `code=` 값 복사
-
-3. 토큰 교환 즉시 실행:
-   ```bash
-   python E:\Claude\Weather\get_token.py
-   ```
-
-### Step 2 — 위 실패 시
-- 카카오 데브톡(개발자 포럼) 문의
-- Make(Integromat) 무료 플랜으로 카카오 OAuth 우회 검토
+### 카카오 OAuth 해결 기록
+**원인**: 카카오 REST API 키는 `client_secret`이 기본 활성화 상태로 생성됨.
+토큰 요청 시 `client_secret` 파라미터를 반드시 포함해야 함.
+- `get_token.py`: `client_secret` 추가
+- `kakao.py`: `KAKAO_CLIENT_SECRET` 환경변수로 `client_secret` 추가
+- `weather.yml`: `KAKAO_CLIENT_SECRET` secrets 참조 추가
 
 ---
 
