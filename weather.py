@@ -93,16 +93,17 @@ def get_forecast():
     pty_val  = nearest(td, 'PTY')
     cur_emoji, cur_weather = _weather(sky_val, pty_val)
 
-    # 시간대별 (06~21시, 3시간 간격)
+    # 시간대별 (06~23시, 1시간 간격)
     hourly = []
-    for hhmm in ['0600', '0900', '1200', '1500', '1800', '2100']:
+    for h in range(6, 24):
+        hhmm = f'{h:02d}00'
         if hhmm not in td.get('TMP', {}):
             continue
         s_val = td.get('SKY', {}).get(hhmm, '1')
         p_val = td.get('PTY', {}).get(hhmm, '0')
         emoji, weather = _weather(s_val, p_val)
         hourly.append({
-            'time':    f"{hhmm[:2]}시",
+            'time':    f"{h}시",
             'tmp':     td.get('TMP', {}).get(hhmm, '-'),
             'emoji':   emoji,
             'weather': weather,
@@ -146,7 +147,7 @@ def get_air():
         params = {
             'serviceKey':  AIR_KEY,
             'returnType':  'json',
-            'numOfRows':   1,
+            'numOfRows':   24,
             'stationName': '파주',
             'dataTerm':    'DAILY',
             'ver':         '1.0',
@@ -156,12 +157,27 @@ def get_air():
         items = resp.json()['response']['body']['items']
         if not items:
             return None
-        item = items[0]
+
+        # API는 최신순 반환 → 오래된 순으로 정렬
+        hourly = []
+        for item in reversed(items):
+            time_str = item.get('dataTime', '')  # "2026-05-22 08:00"
+            hour = time_str.split(' ')[1][:2] + '시' if ' ' in time_str else '-'
+            hourly.append({
+                'time':       hour,
+                'pm10':       item.get('pm10Value', '-'),
+                'pm10_grade': GRADE.get(item.get('pm10Grade', ''), '-'),
+                'pm25':       item.get('pm25Value', '-'),
+                'pm25_grade': GRADE.get(item.get('pm25Grade', ''), '-'),
+            })
+
+        latest = hourly[-1]
         return {
-            'pm10':       item.get('pm10Value', '-'),
-            'pm10_grade': GRADE.get(item.get('pm10Grade1h', ''), '-'),
-            'pm25':       item.get('pm25Value', '-'),
-            'pm25_grade': GRADE.get(item.get('pm25Grade1h', ''), '-'),
+            'pm10':       latest['pm10'],
+            'pm10_grade': latest['pm10_grade'],
+            'pm25':       latest['pm25'],
+            'pm25_grade': latest['pm25_grade'],
+            'hourly':     hourly,
         }
     except Exception as e:
         print(f"미세먼지 API 오류: {e}")

@@ -25,14 +25,14 @@ def build_message(forecast, air):
     lines.append("")
 
     if air:
-        pm10_e = GRADE_EMOJI.get(air['pm10_grade'], '⚪')
-        pm25_e = GRADE_EMOJI.get(air['pm25_grade'], '⚪')
-        lines += [
-            "🌫 미세먼지",
-            f"  PM10   {pm10_e} {air['pm10']}㎍/㎥  [{air['pm10_grade']}]",
-            f"  PM2.5  {pm25_e} {air['pm25']}㎍/㎥  [{air['pm25_grade']}]",
-            "",
-        ]
+        lines.append("🌫 미세먼지 (시간대별)")
+        for h in air['hourly']:
+            pm10_e = GRADE_EMOJI.get(h['pm10_grade'], '⚪')
+            pm25_e = GRADE_EMOJI.get(h['pm25_grade'], '⚪')
+            lines.append(
+                f"  {h['time']}  PM10 {pm10_e}{h['pm10']}㎍  PM2.5 {pm25_e}{h['pm25']}㎍"
+            )
+        lines.append("")
     else:
         lines += ["🌫 미세먼지 정보 없음", ""]
 
