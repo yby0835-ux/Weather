@@ -20,9 +20,25 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Check secrets
+        env:
+          DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
+          KAKAO_REST_API_KEY: ${{ secrets.KAKAO_REST_API_KEY }}
+          KAKAO_REFRESH_TOKEN: ${{ secrets.KAKAO_REFRESH_TOKEN }}
+        run: |
+          python -c "
+          import os
+          k1 = os.environ.get('DATA_GO_KR_KEY', '')
+          k2 = os.environ.get('KAKAO_REST_API_KEY', '')
+          k3 = os.environ.get('KAKAO_REFRESH_TOKEN', '')
+          print(f'DATA_GO_KR_KEY     : {len(k1)}자')
+          print(f'KAKAO_REST_API_KEY : {len(k2)}자')
+          print(f'KAKAO_REFRESH_TOKEN: {len(k3)}자')
+          "
+
       - name: Send weather notification
         env:
-          DATA_GO_KR_KEY:      ${{ secrets.DATA_GO_KR_KEY }}
-          KAKAO_REST_API_KEY:  ${{ secrets.KAKAO_REST_API_KEY }}
+          DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
+          KAKAO_REST_API_KEY: ${{ secrets.KAKAO_REST_API_KEY }}
           KAKAO_REFRESH_TOKEN: ${{ secrets.KAKAO_REFRESH_TOKEN }}
         run: python main.py
