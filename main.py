@@ -31,7 +31,11 @@ def build_message(forecast, air):
 
 if __name__ == '__main__':
     forecast = get_forecast()
-    air = get_air()
+    try:
+        air = get_air()
+    except Exception as e:
+        print(f"미세먼지 조회 실패 (API 미승인 또는 오류): {e}")
+        air = None
     message = build_message(forecast, air)
     print(message)
     send_message(message)
