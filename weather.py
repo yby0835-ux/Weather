@@ -3,7 +3,8 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 import os
 
-KEY = os.environ['DATA_GO_KR_KEY']
+KEY     = os.environ['DATA_GO_KR_KEY']
+AIR_KEY = os.environ['AIR_KOREA_KEY']
 KST = ZoneInfo('Asia/Seoul')
 NX, NY = 37, 133  # 경기도 파주시
 
@@ -77,7 +78,7 @@ def get_air():
     try:
         url = 'http://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty'
         params = {
-            'serviceKey': KEY,
+            'serviceKey': AIR_KEY,
             'returnType': 'json',
             'numOfRows': 1,
             'stationName': '파주',
