@@ -14,7 +14,7 @@ def build_message(forecast, air):
         f"현재 기온     : {forecast['tmp']}°C",
         f"최저 / 최고   : {forecast['tmp_min']}°C / {forecast['tmp_max']}°C",
         f"날씨          : {weather}",
-        f"강수확률      : 오전 {forecast['am_pop']}%  /  오후 {forecast['pm_pop']}%",
+        f"강수확률      : 오전 {forecast['am_pop']}%  /  오후 {forecast['pm_pop']}%".replace('-%', '-'),
         "",
     ]
 
