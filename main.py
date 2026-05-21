@@ -3,28 +3,45 @@ from zoneinfo import ZoneInfo
 from weather import get_forecast, get_air
 from kakao import send_message
 
+GRADE_EMOJI = {'좋음': '🟢', '보통': '🟡', '나쁨': '🔴', '매우나쁨': '🟣'}
+
 
 def build_message(forecast, air):
-    now = datetime.now(ZoneInfo('Asia/Seoul')).strftime('%Y년 %m월 %d일 %H:%M')
-    weather = forecast['sky'] if forecast['pty'] == '없음' else forecast['pty']
+    date_str = datetime.now(ZoneInfo('Asia/Seoul')).strftime('%Y년 %m월 %d일')
 
     lines = [
-        f"[ 파주시 오늘 날씨 ]  {now}",
+        f"{forecast['emoji']} 파주시 오늘 날씨  {date_str}",
+        "─" * 24,
+        f"🌡 현재 {forecast['tmp']}°C  (체감 {forecast['feel_tmp']}°C)  {forecast['weather']}",
+        f"   최저 {forecast['tmp_min']}°C  /  최고 {forecast['tmp_max']}°C",
+        f"   💧 습도 {forecast['humidity']}%   💨 바람 {forecast['wind']}m/s",
         "",
-        f"현재 기온     : {forecast['tmp']}°C",
-        f"최저 / 최고   : {forecast['tmp_min']}°C / {forecast['tmp_max']}°C",
-        f"날씨          : {weather}",
-        f"강수확률      : 오전 {forecast['am_pop']}%  /  오후 {forecast['pm_pop']}%".replace('-%', '-'),
-        "",
+        "⏰ 시간대별",
     ]
 
+    for h in forecast['hourly']:
+        lines.append(f"  {h['emoji']} {h['time']}  {h['tmp']}°C  {h['weather']}  강수 {h['pop']}%")
+
+    lines.append("")
+
     if air:
+        pm10_e = GRADE_EMOJI.get(air['pm10_grade'], '⚪')
+        pm25_e = GRADE_EMOJI.get(air['pm25_grade'], '⚪')
         lines += [
-            f"미세먼지 (PM10)    : {air['pm10']} ㎍/㎥  [{air['pm10_grade']}]",
-            f"초미세먼지 (PM2.5) : {air['pm25']} ㎍/㎥  [{air['pm25_grade']}]",
+            "🌫 미세먼지",
+            f"  PM10   {pm10_e} {air['pm10']}㎍/㎥  [{air['pm10_grade']}]",
+            f"  PM2.5  {pm25_e} {air['pm25']}㎍/㎥  [{air['pm25_grade']}]",
+            "",
         ]
     else:
-        lines.append("미세먼지 정보를 가져올 수 없습니다.")
+        lines += ["🌫 미세먼지 정보 없음", ""]
+
+    tmr = forecast['tomorrow']
+    lines += [
+        "📅 내일 예보",
+        f"  {tmr['emoji']} {tmr['weather']}  최저 {tmr['tmp_min']}°C / 최고 {tmr['tmp_max']}°C",
+        f"  강수확률  오전 {tmr['am_pop']}%  /  오후 {tmr['pm_pop']}%",
+    ]
 
     return "\n".join(lines)
 
@@ -34,7 +51,7 @@ if __name__ == '__main__':
     try:
         air = get_air()
     except Exception as e:
-        print(f"미세먼지 조회 실패 (API 미승인 또는 오류): {e}")
+        print(f"미세먼지 조회 실패: {e}")
         air = None
     message = build_message(forecast, air)
     print(message)
