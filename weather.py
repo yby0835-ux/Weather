@@ -74,24 +74,28 @@ def get_forecast():
 
 
 def get_air():
-    url = 'http://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty'
-    params = {
-        'serviceKey': KEY,
-        'returnType': 'json',
-        'numOfRows': 1,
-        'stationName': '파주',
-        'dataTerm': 'DAILY',
-        'ver': '1.0',
-    }
-    resp = requests.get(url, params=params, timeout=10)
-    resp.raise_for_status()
-    items = resp.json()['response']['body']['items']
-    if not items:
+    try:
+        url = 'http://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty'
+        params = {
+            'serviceKey': KEY,
+            'returnType': 'json',
+            'numOfRows': 1,
+            'stationName': '파주',
+            'dataTerm': 'DAILY',
+            'ver': '1.0',
+        }
+        resp = requests.get(url, params=params, timeout=10)
+        resp.raise_for_status()
+        items = resp.json()['response']['body']['items']
+        if not items:
+            return None
+        item = items[0]
+        return {
+            'pm10':       item.get('pm10Value', '-'),
+            'pm10_grade': GRADE.get(item.get('pm10Grade1h', ''), '-'),
+            'pm25':       item.get('pm25Value', '-'),
+            'pm25_grade': GRADE.get(item.get('pm25Grade1h', ''), '-'),
+        }
+    except Exception as e:
+        print(f"미세먼지 API 오류 (승인 대기 중일 수 있음): {e}")
         return None
-    item = items[0]
-    return {
-        'pm10':       item.get('pm10Value', '-'),
-        'pm10_grade': GRADE.get(item.get('pm10Grade1h', ''), '-'),
-        'pm25':       item.get('pm25Value', '-'),
-        'pm25_grade': GRADE.get(item.get('pm25Grade1h', ''), '-'),
-    }
