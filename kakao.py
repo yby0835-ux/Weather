@@ -3,6 +3,7 @@ import json
 import os
 
 REST_KEY      = os.environ['KAKAO_REST_API_KEY']
+CLIENT_SECRET = os.environ['KAKAO_CLIENT_SECRET']
 REFRESH_TOKEN = os.environ['KAKAO_REFRESH_TOKEN']
 
 
@@ -10,6 +11,7 @@ def _get_access_token():
     resp = requests.post('https://kauth.kakao.com/oauth/token', data={
         'grant_type':    'refresh_token',
         'client_id':     REST_KEY,
+        'client_secret': CLIENT_SECRET,
         'refresh_token': REFRESH_TOKEN,
     })
     if not resp.ok:
