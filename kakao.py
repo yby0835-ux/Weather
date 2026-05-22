@@ -33,3 +33,24 @@ def send_message(text):
         data={'template_object': template},
     )
     resp.raise_for_status()
+
+
+def send_image_message(image_url, title, description):
+    token = _get_access_token()
+    template = json.dumps({
+        'object_type': 'feed',
+        'content': {
+            'title':       title,
+            'description': description,
+            'image_url':   image_url,
+            'image_width':  1200,
+            'image_height': 700,
+            'link': {'web_url': 'https://www.weather.go.kr'},
+        },
+    }, ensure_ascii=False)
+    resp = requests.post(
+        'https://kapi.kakao.com/v2/api/talk/memo/default/send',
+        headers={'Authorization': f'Bearer {token}'},
+        data={'template_object': template},
+    )
+    resp.raise_for_status()
