@@ -19,17 +19,23 @@ if __name__ == '__main__':
     desc     = (f"현재 {forecast['tmp']}°C · {forecast['weather']} · "
                 f"최저 {forecast['tmp_min']}° / 최고 {forecast['tmp_max']}°")
 
+    import traceback
+
     try:
         print("날씨 카드 이미지 생성 중...")
         image_bytes = generate_chart(forecast, air)
+        print(f"이미지 생성 완료 ({len(image_bytes)} bytes)")
+
         print("이미지 업로드 중...")
         image_url = upload_image(image_bytes)
         print(f"업로드 완료: {image_url}")
+
         send_image_message(image_url, title, desc)
         print("카카오톡 전송 완료 (이미지)")
     except Exception as e:
-        print(f"이미지 전송 실패, 텍스트로 대체: {e}")
-        # 이미지 실패 시 텍스트로 fallback
+        print(f"[오류] {type(e).__name__}: {e}")
+        traceback.print_exc()
+        print("텍스트 방식으로 대체 전송합니다.")
         from main_text import build_message
         send_message(build_message(forecast, air))
         print("카카오톡 전송 완료 (텍스트 대체)")
