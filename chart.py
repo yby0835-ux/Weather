@@ -49,11 +49,11 @@ def generate_chart(forecast, air):
     now      = datetime.now(ZoneInfo('Asia/Seoul'))
     date_str = now.strftime('%Y년 %m월 %d일')
 
-    fig = plt.figure(figsize=(12, 7), facecolor='#FAFAFA')
+    fig = plt.figure(figsize=(10, 14), facecolor='#FAFAFA')
     gs  = gridspec.GridSpec(3, 1, figure=fig,
-                            height_ratios=[4, 1.5, 1.2],
+                            height_ratios=[5, 2, 1.5],
                             hspace=0.08,
-                            top=0.88, bottom=0.04, left=0.06, right=0.97)
+                            top=0.91, bottom=0.03, left=0.06, right=0.97)
 
     # ── 제목 ──────────────────────────────────────────────────────────
     fig.text(0.5, 0.95,

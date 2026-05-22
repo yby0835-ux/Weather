@@ -43,8 +43,8 @@ def send_image_message(image_url, title, description):
             'title':       title,
             'description': description,
             'image_url':   image_url,
-            'image_width':  1200,
-            'image_height': 700,
+            'image_width':  1500,
+            'image_height': 2100,
             'link': {'web_url': 'https://www.weather.go.kr'},
         },
     }, ensure_ascii=False)
