@@ -147,7 +147,7 @@ def get_air():
         params = {
             'serviceKey':  AIR_KEY,
             'returnType':  'json',
-            'numOfRows':   24,
+            'numOfRows':   1,
             'stationName': '파주',
             'dataTerm':    'DAILY',
             'ver':         '1.0',
@@ -157,27 +157,12 @@ def get_air():
         items = resp.json()['response']['body']['items']
         if not items:
             return None
-
-        # API는 최신순 반환 → 오래된 순으로 정렬
-        hourly = []
-        for item in reversed(items):
-            time_str = item.get('dataTime', '')  # "2026-05-22 08:00"
-            hour = time_str.split(' ')[1][:2] + '시' if ' ' in time_str else '-'
-            hourly.append({
-                'time':       hour,
-                'pm10':       item.get('pm10Value', '-'),
-                'pm10_grade': GRADE.get(item.get('pm10Grade', ''), '-'),
-                'pm25':       item.get('pm25Value', '-'),
-                'pm25_grade': GRADE.get(item.get('pm25Grade', ''), '-'),
-            })
-
-        latest = hourly[-1]
+        item = items[0]
         return {
-            'pm10':       latest['pm10'],
-            'pm10_grade': latest['pm10_grade'],
-            'pm25':       latest['pm25'],
-            'pm25_grade': latest['pm25_grade'],
-            'hourly':     hourly,
+            'pm10':       item.get('pm10Value', '-'),
+            'pm10_grade': GRADE.get(item.get('pm10Grade', ''), '-'),
+            'pm25':       item.get('pm25Value', '-'),
+            'pm25_grade': GRADE.get(item.get('pm25Grade', ''), '-'),
         }
     except Exception as e:
         print(f"미세먼지 API 오류: {e}")

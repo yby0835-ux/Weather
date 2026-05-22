@@ -29,9 +29,12 @@ GRADE_COLOR = {
 
 
 def _setup_font():
-    nanum = [f.name for f in fm.fontManager.ttflist if 'Nanum' in f.name]
-    if nanum:
-        plt.rcParams['font.family'] = nanum[0]
+    candidates = ['NanumGothic', 'Malgun Gothic', 'Apple SD Gothic Neo', 'DejaVu Sans']
+    available  = {f.name for f in fm.fontManager.ttflist}
+    for font in candidates:
+        if font in available:
+            plt.rcParams['font.family'] = font
+            break
     plt.rcParams['axes.unicode_minus'] = False
 
 
