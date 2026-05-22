@@ -93,9 +93,9 @@ def get_forecast():
     pty_val  = nearest(td, 'PTY')
     cur_emoji, cur_weather = _weather(sky_val, pty_val)
 
-    # 시간대별 (06~23시, 1시간 간격)
+    # 지정 시간대만
     hourly = []
-    for h in range(6, 24):
+    for h in [6, 7, 8, 11, 12, 13, 17, 18, 19]:
         hhmm = f'{h:02d}00'
         if hhmm not in td.get('TMP', {}):
             continue
