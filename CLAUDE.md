@@ -19,8 +19,8 @@ PC가 꺼져 있어도 동작하도록 GitHub Actions를 실행 엔진으로 사
 [main.py]
     ↓ 날씨 데이터 → 텍스트+이모지 메시지 포맷 생성
 [kakao.py]
-    ↓ refresh_token → access_token 갱신 (Kakao OAuth)
-    ↓ 새 refresh_token 수신 시 GitHub Secret 자동 업데이트
+    ↓ refresh_token → access_token 갱신
+    ↓ 새 refresh_token 수신 시 GH_PAT로 GitHub Secret 자동 업데이트
     ↓ access_token으로 '나에게 메시지 보내기' API 호출
 [카카오톡 수신]
 ```
@@ -37,11 +37,11 @@ E:\Claude\Weather\
 ├── weather.py             ← 기상청 + 에어코리아 API 호출
 ├── kakao.py               ← access_token 갱신 + refresh_token 자동 갱신 + 메시지 전송
 ├── main.py                ← 진입점: 데이터 조회 → 포맷 → 전송
-├── requirements.txt       ← 의존성: requests, PyNaCl
-├── get_token.py           ← 최초 1회 refresh_token 발급용 (GitHub 미포함)
-├── .gitignore             ← get_token.py, .env 제외
+├── requirements.txt       ← requests, PyNaCl
+├── get_token.py           ← 최초 1회 refresh_token 발급용 (git 제외)
+├── .gitignore
 ├── CLAUDE.md              ← 이 파일
-└── PROJECT_DOC.md         ← 프로젝트 전체 문서 (PRD, 이슈 이력 등)
+└── PROJECT_DOC.md         ← 전체 프로젝트 문서
 ```
 
 ---
@@ -91,8 +91,8 @@ E:\Claude\Weather\
 ### 날씨 데이터
 | 항목 | API | 출처 | 상태 |
 |---|---|---|---|
-| 기온, 강수확률, 날씨 | 기상청 단기예보 | data.go.kr | ✅ 정상 |
-| 미세먼지 PM10, PM2.5 | 에어코리아 대기오염 | data.go.kr | ✅ 정상 |
+| 기온, 강수확률, 날씨 | 기상청 단기예보 | data.go.kr | ✅ |
+| 미세먼지 PM10, PM2.5 | 에어코리아 대기오염 | data.go.kr | ✅ |
 
 - 지역: 경기도 파주시 (기상청 격자 nx=37, ny=133, 측정소=파주)
 - 에어코리아 API: **HTTPS 필수** (`https://apis.data.go.kr/...`)
@@ -107,10 +107,9 @@ E:\Claude\Weather\
 - Redirect URI: `https://example.com` (플랫폼 키 > REST API 키에 등록)
 
 ### refresh_token 자동 갱신
-- 카카오는 refresh_token **만료 30일 미만**일 때 토큰 갱신 응답에 새 refresh_token 포함
-- 매일 실행 시 새 refresh_token이 오면 GitHub Secrets API로 자동 업데이트
-- 필요 라이브러리: `PyNaCl` (GitHub Secret 암호화)
-- 필요 권한: workflow에 `secrets: write` + `GITHUB_TOKEN`
+- 카카오는 만료 **30일 미만**일 때 새 refresh_token을 응답에 포함
+- 새 token 수신 시 `GH_PAT`로 GitHub Secrets API를 호출해 자동 업데이트
+- 라이브러리: `PyNaCl` (Secret 암호화)
 - **사람이 직접 갱신할 필요 없음**
 
 ### GitHub Actions
@@ -122,41 +121,21 @@ E:\Claude\Weather\
 
 ## GitHub Secrets
 
-```
-https://github.com/yby0835-ux/Weather/settings/secrets/actions
-```
-
-| Secret 이름 | 설명 | 상태 |
+| Secret | 설명 | 갱신 |
 |---|---|---|
-| `DATA_GO_KR_KEY` | 공공데이터포털 API 키 (기상청) | ✅ |
-| `AIR_KOREA_KEY` | 공공데이터포털 API 키 (에어코리아) | ✅ |
-| `KAKAO_REST_API_KEY` | 카카오 앱 REST API 키 (Weather2) | ✅ |
-| `KAKAO_CLIENT_SECRET` | 카카오 앱 클라이언트 시크릿 | ✅ |
-| `KAKAO_REFRESH_TOKEN` | 카카오 OAuth refresh token (자동 갱신) | ✅ |
-
----
-
-## 주요 해결 이력
-
-### 카카오 OAuth KOE010 해결
-- **원인**: 카카오 REST API 키는 client_secret이 기본 활성화
-- **해결**: 토큰 요청 시 `client_secret` 파라미터 포함
-
-### 에어코리아 API 403 해결
-- **원인**: HTTP로 호출 시 403 반환
-- **해결**: `https://apis.data.go.kr/...` HTTPS로 변경
-
-### 이미지 전송 catbox.moe 412 해결
-- **원인**: GitHub Actions IP가 catbox.moe에서 차단
-- **시도**: GitHub Releases API로 대체 → 성공
-- **최종**: 텍스트 방식으로 전환하면서 해당 문제 소멸
+| `DATA_GO_KR_KEY` | 공공데이터포털 API 키 (기상청) | 영구 |
+| `AIR_KOREA_KEY` | 공공데이터포털 API 키 (에어코리아) | 영구 |
+| `KAKAO_REST_API_KEY` | 카카오 앱 REST API 키 | 영구 |
+| `KAKAO_CLIENT_SECRET` | 카카오 클라이언트 시크릿 | 영구 |
+| `KAKAO_REFRESH_TOKEN` | 카카오 OAuth refresh token | **자동 갱신** |
+| `GH_PAT` | GitHub PAT (Secrets 쓰기 권한) | 만료일 확인 |
 
 ---
 
 ## 운영 가이드
 
 ### 발송 시각 변경
-`.github/workflows/weather.yml`에서 cron 수정. KST = UTC + 9
+`.github/workflows/weather.yml`의 cron 수정 (KST = UTC + 9)
 
 | 원하는 시각 | cron 값 |
 |---|---|
@@ -165,19 +144,25 @@ https://github.com/yby0835-ux/Weather/settings/secrets/actions
 | 오전 8시 | `0 23 * * *` |
 
 ### 시간대 변경
-`weather.py` 내 아래 목록 수정:
+`weather.py` 내 목록 수정:
 ```python
 for h in [6, 7, 8, 11, 12, 13, 17, 18, 19]:
 ```
 
-### refresh_token 최초 발급 (초기 설정 시)
+### refresh_token 최초 발급 (초기 설정 1회)
+```
 1. 브라우저에서 인가 코드 획득:
-   ```
    https://kauth.kakao.com/oauth/authorize?client_id=d40c837591e55451fddf671490367d0d&redirect_uri=https://example.com&response_type=code&scope=talk_message
-   ```
-2. 로컬에서 실행:
-   ```bash
-   python get_token.py
-   ```
-3. 출력된 refresh_token을 GitHub Secrets `KAKAO_REFRESH_TOKEN`에 등록
-4. 이후 자동 갱신됨
+
+2. python get_token.py 실행
+
+3. 출력된 refresh_token → GitHub Secrets KAKAO_REFRESH_TOKEN 등록
+   (이후 자동 갱신)
+```
+
+### GH_PAT 만료 시 재발급
+```
+https://github.com/settings/personal-access-tokens
+→ Weather-AutoRenew 토큰 재생성
+→ GitHub Secrets GH_PAT 업데이트
+```
