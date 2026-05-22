@@ -10,10 +10,10 @@ REFRESH_TOKEN = os.environ['KAKAO_REFRESH_TOKEN']
 
 def _update_github_secret(secret_name, secret_value):
     """GitHub Secret을 새 값으로 업데이트."""
-    token = os.environ.get('GITHUB_TOKEN', '')
+    token = os.environ.get('GH_PAT', '')
     repo  = os.environ.get('GITHUB_REPOSITORY', 'yby0835-ux/Weather')
     if not token:
-        print("GITHUB_TOKEN 없음 — Secret 자동 업데이트 건너뜀")
+        print("GH_PAT 없음 — Secret 자동 업데이트 건너뜀")
         return
 
     headers = {
