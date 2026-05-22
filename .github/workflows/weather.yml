@@ -8,8 +8,6 @@ on:
 jobs:
   send-weather:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
 
     steps:
       - uses: actions/checkout@v4
@@ -19,31 +17,8 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install Korean font
-        run: sudo apt-get install -y fonts-nanum
-
       - name: Install dependencies
         run: pip install -r requirements.txt
-
-      - name: Check secrets
-        env:
-          DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
-          AIR_KOREA_KEY: ${{ secrets.AIR_KOREA_KEY }}
-          KAKAO_REST_API_KEY: ${{ secrets.KAKAO_REST_API_KEY }}
-          KAKAO_CLIENT_SECRET: ${{ secrets.KAKAO_CLIENT_SECRET }}
-          KAKAO_REFRESH_TOKEN: ${{ secrets.KAKAO_REFRESH_TOKEN }}
-        run: |
-          python -c "
-          import os
-          k1 = os.environ.get('DATA_GO_KR_KEY', '')
-          k2 = os.environ.get('KAKAO_REST_API_KEY', '')
-          k3 = os.environ.get('KAKAO_CLIENT_SECRET', '')
-          k4 = os.environ.get('KAKAO_REFRESH_TOKEN', '')
-          print(f'DATA_GO_KR_KEY      : {len(k1)}자')
-          print(f'KAKAO_REST_API_KEY  : {len(k2)}자')
-          print(f'KAKAO_CLIENT_SECRET : {len(k3)}자')
-          print(f'KAKAO_REFRESH_TOKEN : {len(k4)}자')
-          "
 
       - name: Send weather notification
         env:
@@ -52,5 +27,4 @@ jobs:
           KAKAO_REST_API_KEY: ${{ secrets.KAKAO_REST_API_KEY }}
           KAKAO_CLIENT_SECRET: ${{ secrets.KAKAO_CLIENT_SECRET }}
           KAKAO_REFRESH_TOKEN: ${{ secrets.KAKAO_REFRESH_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python main.py
