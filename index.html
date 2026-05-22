@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>파주시 날씨</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body {
+  font-family: 'Noto Sans KR', sans-serif;
+  background: #EBF0F5;
+  min-height: 100vh;
+  padding-bottom: 24px;
+}
+.container { max-width: 480px; margin: 0 auto; padding: 0 12px; }
+
+/* ── 헤더 ── */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 4px 12px;
+}
+.location { font-size: 22px; font-weight: 700; color: #1a1a2e; }
+.updated   { font-size: 11px; color: #888; }
+
+/* ── 현재 날씨 카드 ── */
+.current-card {
+  background: linear-gradient(135deg, #4A90D9 0%, #2C6FAC 100%);
+  border-radius: 24px;
+  padding: 28px 24px 24px;
+  color: white;
+  text-align: center;
+  margin-bottom: 14px;
+  box-shadow: 0 8px 24px rgba(74,144,217,0.35);
+}
+.weather-icon-big { font-size: 56px; line-height: 1; margin-bottom: 6px; }
+.temp-big   { font-size: 72px; font-weight: 700; line-height: 1; letter-spacing: -2px; }
+.weather-name { font-size: 20px; font-weight: 500; margin: 8px 0; opacity: 0.92; }
+.temp-range { font-size: 14px; opacity: 0.8; margin-bottom: 16px; }
+.details-row {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  background: rgba(255,255,255,0.18);
+  border-radius: 12px;
+  padding: 10px 0;
+}
+.detail-item { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.detail-label { font-size: 10px; opacity: 0.75; }
+.detail-value { font-size: 15px; font-weight: 500; }
+
+/* ── 정보 카드 행 ── */
+.info-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.info-card {
+  background: white;
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+}
+.card-label { font-size: 11px; color: #888; margin-bottom: 4px; }
+.card-grade { font-size: 20px; font-weight: 700; margin-bottom: 2px; }
+.card-value { font-size: 12px; color: #666; }
+.good      .card-grade { color: #43A047; }
+.normal    .card-grade { color: #FB8C00; }
+.bad       .card-grade { color: #E53935; }
+.verybad   .card-grade { color: #8E24AA; }
+
+/* ── 시간대별 섹션 ── */
+.section-card {
+  background: white;
+  border-radius: 20px;
+  padding: 18px 16px;
+  margin-bottom: 14px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+}
+.section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 14px;
+}
+
+/* 차트 */
+.chart-wrap { position: relative; height: 110px; margin-bottom: 4px; }
+
+/* 시간대별 스크롤 */
+.hourly-scroll {
+  display: flex;
+  overflow-x: auto;
+  gap: 2px;
+  padding: 4px 0 8px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.hourly-scroll::-webkit-scrollbar { display: none; }
+.hourly-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 50px;
+  gap: 4px;
+  padding: 6px 4px;
+  border-radius: 10px;
+  transition: background 0.15s;
+}
+.hourly-item:active { background: #f0f4f8; }
+.h-time  { font-size: 11px; color: #888; }
+.h-icon  { font-size: 22px; }
+.h-temp  { font-size: 14px; font-weight: 600; color: #222; }
+.h-pop   { font-size: 10px; color: #4A90D9; font-weight: 500; }
+.h-pop.zero { color: #ccc; }
+
+/* ── 내일 예보 ── */
+.tomorrow-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.tmr-icon    { font-size: 28px; }
+.tmr-weather { font-size: 16px; font-weight: 500; color: #333; flex: 1; }
+.tmr-range   { font-size: 14px; color: #555; }
+.tmr-pop     { font-size: 12px; color: #888; padding-left: 38px; }
+
+/* ── 푸터 ── */
+.footer { text-align: center; font-size: 10px; color: #bbb; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="location">📍 파주시</div>
+    <div class="updated">2026년 05월 22일 10:09 기준</div>
+  </div>
+
+  <div class="current-card">
+    <div class="weather-icon-big">☀️</div>
+    <div class="temp-big">21°</div>
+    <div class="weather-name">맑음</div>
+    <div class="temp-range">최저 18° / 최고 23°</div>
+    <div class="details-row">
+      <div class="detail-item">
+        <span class="detail-label">체감온도</span>
+        <span class="detail-value">21°</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">습도</span>
+        <span class="detail-value">65%</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">바람</span>
+        <span class="detail-value">2.3m/s</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-cards">
+    <div class="info-card good">
+      <div class="card-label">미세먼지 (PM10)</div>
+      <div class="card-grade">좋음</div>
+      <div class="card-value">15 ㎍/㎥</div>
+    </div>
+    <div class="info-card good">
+      <div class="card-label">초미세먼지 (PM2.5)</div>
+      <div class="card-grade">좋음</div>
+      <div class="card-value">- ㎍/㎥</div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-title">⏰ 시간대별 날씨</div>
+    <div class="chart-wrap">
+      <canvas id="tempChart"></canvas>
+    </div>
+    <div class="hourly-scroll" id="hourlyScroll">
+      <div class="hourly-item"><span class="h-time">9시</span><span class="h-icon">☀️</span><span class="h-temp">19°</span><span class="h-pop zero">0%</span></div><div class="hourly-item"><span class="h-time">10시</span><span class="h-icon">☀️</span><span class="h-temp">20°</span><span class="h-pop zero">0%</span></div><div class="hourly-item"><span class="h-time">11시</span><span class="h-icon">☀️</span><span class="h-temp">21°</span><span class="h-pop zero">0%</span></div><div class="hourly-item"><span class="h-time">12시</span><span class="h-icon">☀️</span><span class="h-temp">21°</span><span class="h-pop zero">0%</span></div><div class="hourly-item"><span class="h-time">13시</span><span class="h-icon">☀️</span><span class="h-temp">22°</span><span class="h-pop zero">0%</span></div><div class="hourly-item"><span class="h-time">14시</span><span class="h-icon">☀️</span><span class="h-temp">23°</span><span class="h-pop zero">0%</span></div><div class="hourly-item"><span class="h-time">15시</span><span class="h-icon">☀️</span><span class="h-temp">23°</span><span class="h-pop zero">0%</span></div><div class="hourly-item"><span class="h-time">16시</span><span class="h-icon">⛅</span><span class="h-temp">23°</span><span class="h-pop">💧20%</span></div><div class="hourly-item"><span class="h-time">17시</span><span class="h-icon">⛅</span><span class="h-temp">23°</span><span class="h-pop">💧20%</span></div><div class="hourly-item"><span class="h-time">18시</span><span class="h-icon">⛅</span><span class="h-temp">22°</span><span class="h-pop">💧20%</span></div><div class="hourly-item"><span class="h-time">19시</span><span class="h-icon">☁️</span><span class="h-temp">20°</span><span class="h-pop">💧30%</span></div><div class="hourly-item"><span class="h-time">20시</span><span class="h-icon">☁️</span><span class="h-temp">19°</span><span class="h-pop">💧30%</span></div><div class="hourly-item"><span class="h-time">21시</span><span class="h-icon">☁️</span><span class="h-temp">18°</span><span class="h-pop">💧30%</span></div><div class="hourly-item"><span class="h-time">22시</span><span class="h-icon">☁️</span><span class="h-temp">18°</span><span class="h-pop">💧30%</span></div><div class="hourly-item"><span class="h-time">23시</span><span class="h-icon">☁️</span><span class="h-temp">18°</span><span class="h-pop">💧30%</span></div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-title">📅 내일 예보</div>
+    <div class="tomorrow-row">
+      <span class="tmr-icon">🌧</span>
+      <span class="tmr-weather">비</span>
+      <span class="tmr-range">15° / 20°</span>
+    </div>
+    <div class="tmr-pop">강수확률 오전 60%  ·  오후 60%</div>
+  </div>
+
+  <div class="footer">기상청 단기예보 · 에어코리아 실시간 측정</div>
+</div>
+
+<script>
+const D = {"hours": ["9시", "10시", "11시", "12시", "13시", "14시", "15시", "16시", "17시", "18시", "19시", "20시", "21시", "22시", "23시"], "temps": [19, 20, 21, 21, 22, 23, 23, 23, 23, 22, 20, 19, 18, 18, 18]};
+
+const ctx = document.getElementById('tempChart').getContext('2d');
+new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: D.hours,
+    datasets: [{
+      data: D.temps,
+      borderColor: '#4A90D9',
+      backgroundColor: 'rgba(74,144,217,0.10)',
+      fill: true,
+      tension: 0.4,
+      pointBackgroundColor: '#fff',
+      pointBorderColor: '#4A90D9',
+      pointBorderWidth: 2,
+      pointRadius: 3,
+      pointHoverRadius: 5,
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: { label: ctx => ctx.parsed.y + '°C' }
+      }
+    },
+    scales: {
+      x: {
+        display: false,
+      },
+      y: {
+        display: false,
+        min: Math.min(...D.temps) - 2,
+        max: Math.max(...D.temps) + 4,
+      }
+    }
+  }
+});
+
+// 현재 시각에 해당하는 시간대로 스크롤
+const now = new Date().getHours();
+const scroll = document.getElementById('hourlyScroll');
+const items = scroll.querySelectorAll('.hourly-item');
+items.forEach((el, i) => {
+  const h = parseInt(D.hours[i]);
+  if (h <= now && (i === items.length-1 || parseInt(D.hours[i+1]) > now)) {
+    el.style.background = '#EBF4FF';
+    el.style.fontWeight = '600';
+    setTimeout(() => el.scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'}), 200);
+  }
+});
+</script>
+</body>
+</html>
