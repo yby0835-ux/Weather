@@ -2,7 +2,7 @@ name: Daily Weather Notification
 
 on:
   schedule:
-    - cron: '40 20 * * *'  # 매일 KST 05:40 (= UTC 20:40 전날)
+    - cron: '0 21 * * *'   # 매일 KST 06:00 (= UTC 21:00 전날)
   workflow_dispatch:        # GitHub 웹에서 수동 실행 가능
 
 jobs:
