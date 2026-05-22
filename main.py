@@ -21,20 +21,40 @@ if __name__ == '__main__':
 
     import traceback
 
+    # 1단계: 이미지 생성
+    image_bytes = None
     try:
-        print("날씨 카드 이미지 생성 중...")
+        print("STEP1: 이미지 생성 중...")
         image_bytes = generate_chart(forecast, air)
-        print(f"이미지 생성 완료 ({len(image_bytes)} bytes)")
-
-        print("이미지 업로드 중...")
-        image_url = upload_image(image_bytes)
-        print(f"업로드 완료: {image_url}")
-
-        send_image_message(image_url, title, desc)
-        print("카카오톡 전송 완료 (이미지)")
+        print(f"STEP1 완료: {len(image_bytes)} bytes")
     except Exception as e:
-        print(f"[오류] {type(e).__name__}: {e}")
+        print(f"STEP1 실패: {type(e).__name__}: {e}")
         traceback.print_exc()
+
+    # 2단계: 업로드
+    image_url = None
+    if image_bytes:
+        try:
+            print("STEP2: 이미지 업로드 중...")
+            image_url = upload_image(image_bytes)
+            print(f"STEP2 완료: {image_url}")
+        except Exception as e:
+            print(f"STEP2 실패: {type(e).__name__}: {e}")
+            traceback.print_exc()
+
+    # 3단계: 카카오톡 전송
+    if image_url:
+        try:
+            print("STEP3: 카카오톡 이미지 전송 중...")
+            send_image_message(image_url, title, desc)
+            print("STEP3 완료: 카카오톡 전송 완료 (이미지)")
+        except Exception as e:
+            print(f"STEP3 실패: {type(e).__name__}: {e}")
+            traceback.print_exc()
+            image_url = None
+
+    # 이미지 실패 시 텍스트 대체
+    if not image_url:
         print("텍스트 방식으로 대체 전송합니다.")
         from main_text import build_message
         send_message(build_message(forecast, air))

@@ -181,11 +181,42 @@ def generate_chart(forecast, air):
 
 def upload_image(image_bytes):
     import requests
-    resp = requests.post(
-        'https://catbox.moe/user/api.php',
-        data={'reqtype': 'fileupload'},
-        files={'fileToUpload': ('weather.png', image_bytes, 'image/png')},
+    import os
+
+    token = os.environ['GITHUB_TOKEN']
+    repo  = os.environ.get('GITHUB_REPOSITORY', 'yby0835-ux/Weather')
+    tag   = 'weather-chart'
+
+    headers = {
+        'Authorization': f'Bearer {token}',
+        'Accept':        'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28',
+    }
+    base = f'https://api.github.com/repos/{repo}'
+
+    # 기존 릴리즈 삭제
+    r = requests.get(f'{base}/releases/tags/{tag}', headers=headers)
+    if r.status_code == 200:
+        release_id = r.json()['id']
+        requests.delete(f'{base}/releases/{release_id}', headers=headers)
+    requests.delete(f'{base}/git/refs/tags/{tag}', headers=headers)
+
+    # 새 릴리즈 생성
+    r = requests.post(f'{base}/releases', headers=headers, json={
+        'tag_name':   tag,
+        'name':       'Weather Chart',
+        'draft':      False,
+        'prerelease': True,
+    })
+    r.raise_for_status()
+    upload_url = r.json()['upload_url'].split('{')[0]
+
+    # 이미지 업로드
+    r = requests.post(
+        f'{upload_url}?name=weather.png',
+        headers={**headers, 'Content-Type': 'image/png'},
+        data=image_bytes,
         timeout=30,
     )
-    resp.raise_for_status()
-    return resp.text.strip()
+    r.raise_for_status()
+    return r.json()['browser_download_url']
