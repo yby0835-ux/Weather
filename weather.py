@@ -48,7 +48,7 @@ def get_forecast():
     url = 'http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst'
     params = {
         'serviceKey': KEY,
-        'numOfRows':  1000,
+        'numOfRows':  500,
         'dataType':   'JSON',
         'base_date':  base_date,
         'base_time':  base_time,
