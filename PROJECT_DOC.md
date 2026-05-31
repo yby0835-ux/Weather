@@ -41,8 +41,13 @@
 
 ```
 ┌─────────────────────────────────────────────┐
+│     Pipedream (외부 스케줄러)                 │
+│     매일 09:00 PM UTC (= KST 06:00) 정확히   │
+└──────────────────┬──────────────────────────┘
+                   │ POST workflow_dispatch (GitHub API)
+┌──────────────────▼──────────────────────────┐
 │              GitHub Actions                  │
-│         cron: 매일 KST 06:00                │
+│         workflow_dispatch 수신 즉시 실행      │
 └──────────────────┬──────────────────────────┘
                    │
           ┌────────▼────────┐
@@ -210,6 +215,15 @@ Weather/
 | **원인** | GitHub Actions `permissions`에 `secrets`는 지원하지 않는 값 |
 | **해결** | `permissions: secrets: write` 제거 |
 
+### Issue 8 — GitHub Actions cron 스케줄 지연 (44~87분)
+
+| | |
+|---|---|
+| **증상** | 매일 KST 06:00 예약이지만 실제 알림은 06:43~07:26에 도착 |
+| **원인** | UTC 21:00은 전 세계 레포가 집중 예약하는 피크 타임. GitHub이 큐에 쌓아 처리하여 평균 67분 지연 발생 |
+| **해결** | GitHub cron 제거 → Pipedream 외부 스케줄러가 매일 09:00 PM UTC에 `workflow_dispatch` API 호출 |
+| **결과** | 지연 없이 KST 06:00 정각에 알림 수신 |
+
 ### Issue 7 — refresh_token 자동 갱신 구현
 
 | | |
@@ -281,3 +295,4 @@ https://github.com/yby0835-ux/Weather/actions/workflows/weather.yml
 | 2026-05-22 | 발송 시각 KST 06:00, 불필요 파일 정리 |
 | 2026-05-22 | refresh_token 자동 갱신 구현 (GH_PAT + PyNaCl) |
 | 2026-05-22 | `secrets: write` 권한 오류 수정, 전체 정상 동작 확인 ✅ |
+| 2026-05-31 | GitHub cron 지연 문제 분석 (평균 67분) → Pipedream 외부 스케줄러로 전환 ✅ |
